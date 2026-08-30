@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 Water Leak Detection Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Water Leak Detection Dashboard</h1>
+    </header>
+    <main>
+        <section id="status">
+            <h2>System Status</h2>
+            <div id="status-info">
+                <!-- Status information will be dynamically updated here -->
+            </div>
+        </section>
+        <section id="data">
+            <h2>Sensor Data</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Node</th>
+                        <th>Flow (L/min)</th>
+                        <th>Pressure (bar)</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="sensor-data">
+                    <!-- Sensor data will be dynamically populated here -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 Water Leak Detection System</p>
+    </footer>
+    <script src="app.js"></script>
+</body>
+</html>

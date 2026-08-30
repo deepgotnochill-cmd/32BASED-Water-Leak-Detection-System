@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Start Dashboard",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "python",
+      "args": ["-m", "http.server", "8000"],
+      "cwd": "${workspaceFolder}/dashboard",
+      "console": "integratedTerminal",
+      "postDebugTask": "Stop Dashboard Server",
+      "preLaunchTask": "Start Dashboard Server"
+    }
+  ]
+}

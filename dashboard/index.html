@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Distributed Water Pipeline</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">SMART DISTRIBUTED WATER PIPELINE</p>
+          <h1>LEAK DETECTION & LOCALIZATION</h1>
+        </div>
+        <div class="header-actions">
+          <button class="scenario-btn" data-scenario="NORMAL">NORMAL</button>
+          <button class="scenario-btn" data-scenario="LEAK_BC">LEAK B-C</button>
+          <button class="scenario-btn" data-scenario="LEAK_CD">LEAK C-D</button>
+          <button class="scenario-btn" data-scenario="TRANSIENT">TRANSIENT</button>
+          <button class="secondary" id="resetBtn">RESET</button>
+          <button class="presentation-btn" id="presentationBtn">PRESENTATION MODE</button>
+        </div>
+      </header>
+
+      <section class="status-strip">
+        <div class="status-box">
+          <span class="label">SYSTEM STATUS</span>
+          <strong id="systemStatus">NORMAL</strong>
+        </div>
+        <div class="status-box">
+          <span class="label">CURRENT SCENARIO</span>
+          <strong id="currentScenario">NORMAL</strong>
+        </div>
+        <div class="status-box alarm-box">
+          <span class="label">LEAK STATUS</span>
+          <strong id="leakStatus">NO LEAK</strong>
+        </div>
+        <div class="status-box">
+          <span class="label">SUSPECTED ZONE</span>
+          <strong id="suspectedZone">NONE</strong>
+        </div>
+        <div class="status-box">
+          <span class="label">CONFIDENCE</span>
+          <strong id="confidence">0%</strong>
+        </div>
+      </section>
+
+      <main class="content-grid">
+        <aside class="inspector-panel">
+          <div class="panel-block">
+            <h2>FLOW & PRESSURE</h2>
+            <div class="metric-row">
+              <span>FLOW</span>
+              <strong id="systemFlow">20.0 L/min</strong>
+            </div>
+            <div class="metric-row">
+              <span>PRESSURE</span>
+              <strong id="systemPressure">3.3 bar</strong>
+            </div>
+          </div>
+
+          <div class="panel-block prediction-panel">
+            <h2>PREDICTION</h2>
+            <div class="metric-row">
+              <span>STATUS</span>
+              <strong id="predictionStatus">NO LEAK</strong>
+            </div>
+            <div class="metric-row">
+              <span>LEAK PROBABILITY</span>
+              <strong id="predictionProbability">0%</strong>
+            </div>
+            <div class="metric-row">
+              <span>CONFIDENCE</span>
+              <strong id="predictionConfidence">0%</strong>
+            </div>
+            <div class="alert-detail">
+              <span>Predicted Zone:</span>
+              <strong id="predictionZone">NONE</strong>
+            </div>
+            <div class="alert-detail">
+              <span>Reason:</span>
+              <strong id="predictionReason">No sustained anomaly detected.</strong>
+            </div>
+            <div class="alert-detail">
+              <span>Mode:</span>
+              <strong id="predictionMode">DEMO</strong>
+            </div>
+          </div>
+
+          <div class="panel-block alert-panel">
+            <h2 id="alertTitle">✓ SYSTEM NORMAL</h2>
+            <div class="alert-detail">
+              <span>Probable Zone:</span>
+              <strong id="alertZone">NONE</strong>
+            </div>
+            <div class="alert-detail">
+              <span>Confidence:</span>
+              <strong id="alertConfidence">0%</strong>
+            </div>
+            <div class="alert-detail">
+              <span>Reason:</span>
+              <strong id="alertReason">No sustained anomaly detected.</strong>
+            </div>
+          </div>
+
+          <div class="panel-block explain-panel">
+            <h2>WHY THIS ALERT?</h2>
+            <ul id="explainList">
+              <li>✓ Flow deviation within baseline.</li>
+              <li>✓ Pressure deviation within baseline.</li>
+              <li>✓ No persistent anomaly detected.</li>
+              <li>✓ Neighboring nodes consistent.</li>
+              <li>✓ Leak zone not required.</li>
+            </ul>
+            <div class="probable-leak-box">
+              <span>PROBABLE LEAK:</span>
+              <strong id="probableLeak">NONE</strong>
+            </div>
+          </div>
+        </aside>
+
+        <section class="visual-panel">
+          <div class="pipeline-shell">
+            <div class="pipeline-viewport" id="pipelineViewport">
+              <div id="threeContainer" aria-label="3D pipeline visualization"></div>
+
+              <div class="scene-hud">
+                <div class="hud-row">
+                  <span class="hud-label">SYSTEM</span>
+                  <strong id="sceneSystem">NORMAL</strong>
+                </div>
+                <div class="hud-row">
+                  <span class="hud-label">FLOW</span>
+                  <strong id="sceneFlow">20.0 L/min</strong>
+                </div>
+                <div class="hud-row">
+                  <span class="hud-label">PRESSURE</span>
+                  <strong id="scenePressure">3.3 bar</strong>
+                </div>
+                <div class="hud-row">
+                  <span class="hud-label">ZONE</span>
+                  <strong id="sceneZone">NONE</strong>
+                </div>
+                <div class="hud-row">
+                  <span class="hud-label">CONFIDENCE</span>
+                  <strong id="sceneConfidence">0%</strong>
+                </div>
+              </div>
+
+              <button id="cameraResetBtn" class="camera-reset-btn">RESET VIEW</button>
+            </div>
+          </div>
+
+          <div class="chart-row">
+            <div class="chart-box">
+              <h3>FLOW PROFILE</h3>
+              <svg id="flowChart" viewBox="0 0 360 170" class="mini-chart"></svg>
+            </div>
+            <div class="chart-box">
+              <h3>PRESSURE PROFILE</h3>
+              <svg id="pressureChart" viewBox="0 0 360 170" class="mini-chart"></svg>
+            </div>
+          </div>
+        </section>
+
+        <aside class="node-panel" id="nodePanel">
+          <div class="node-card normal" data-node-card="A">
+            <div class="node-card-header">
+              <span>NODE A</span>
+              <span class="tag">NORMAL</span>
+            </div>
+            <div class="metric-line"><span>Flow</span><strong>20.0 L/min</strong></div>
+            <div class="metric-line"><span>Pressure</span><strong>3.3 bar</strong></div>
+            <div class="metric-line"><span>Status</span><strong>NORMAL</strong></div>
+            <div class="metric-line"><span>Health</span><strong>HEALTHY</strong></div>
+          </div>
+
+          <div class="node-card normal" data-node-card="B">
+            <div class="node-card-header">
+              <span>NODE B</span>
+              <span class="tag">NORMAL</span>
+            </div>
+            <div class="metric-line"><span>Flow</span><strong>20.0 L/min</strong></div>
+            <div class="metric-line"><span>Pressure</span><strong>3.3 bar</strong></div>
+            <div class="metric-line"><span>Status</span><strong>NORMAL</strong></div>
+            <div class="metric-line"><span>Health</span><strong>HEALTHY</strong></div>
+          </div>
+
+          <div class="node-card normal" data-node-card="C">
+            <div class="node-card-header">
+              <span>NODE C</span>
+              <span class="tag">NORMAL</span>
+            </div>
+            <div class="metric-line"><span>Flow</span><strong>20.0 L/min</strong></div>
+            <div class="metric-line"><span>Pressure</span><strong>3.3 bar</strong></div>
+            <div class="metric-line"><span>Status</span><strong>NORMAL</strong></div>
+            <div class="metric-line"><span>Health</span><strong>HEALTHY</strong></div>
+          </div>
+
+          <div class="node-card normal" data-node-card="D">
+            <div class="node-card-header">
+              <span>NODE D</span>
+              <span class="tag">NORMAL</span>
+            </div>
+            <div class="metric-line"><span>Flow</span><strong>20.0 L/min</strong></div>
+            <div class="metric-line"><span>Pressure</span><strong>3.3 bar</strong></div>
+            <div class="metric-line"><span>Status</span><strong>NORMAL</strong></div>
+            <div class="metric-line"><span>Health</span><strong>HEALTHY</strong></div>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./node_modules/three/build/three.module.js"
+        }
+      }
+    </script>
+    <script type="module" src="./script.js"></script>
+  </body>
+</html>

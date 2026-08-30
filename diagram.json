@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "author": "Copilot",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-esp32-devkit-v1", "id": "esp32", "top": 0, "left": 0 },
+    { "type": "wokwi-led", "id": "ledA", "top": -90, "left": -200, "attrs": { "color": "green" } },
+    { "type": "wokwi-led", "id": "ledB", "top": -90, "left": -150, "attrs": { "color": "yellow" } },
+    { "type": "wokwi-led", "id": "ledC", "top": -90, "left": -100, "attrs": { "color": "orange" } },
+    { "type": "wokwi-led", "id": "ledD", "top": -90, "left": -50, "attrs": { "color": "blue" } },
+    { "type": "wokwi-led", "id": "alertLed", "top": -90, "left": 20, "attrs": { "color": "red" } },
+    { "type": "wokwi-buzzer", "id": "buzzer", "top": 120, "left": 240 },
+    { "type": "wokwi-potentiometer", "id": "flowPot", "top": -220, "left": 100, "attrs": { "value": "50" } },
+    { "type": "wokwi-potentiometer", "id": "pressurePot", "top": -220, "left": 200, "attrs": { "value": "50" } }
+  ],
+  "connections": [
+    ["esp32:GND.1", "ledA:cathode", "black"],
+    ["esp32:GND.1", "ledB:cathode", "black"],
+    ["esp32:GND.1", "ledC:cathode", "black"],
+    ["esp32:GND.1", "ledD:cathode", "black"],
+    ["esp32:GND.1", "alertLed:cathode", "black"],
+    ["esp32:GND.1", "buzzer:NEG", "black"],
+
+    ["esp32:GPIO18", "ledA:anode", "red"],
+    ["esp32:GPIO19", "ledB:anode", "red"],
+    ["esp32:GPIO21", "ledC:anode", "red"],
+    ["esp32:GPIO22", "ledD:anode", "red"],
+    ["esp32:GPIO25", "alertLed:anode", "red"],
+    ["esp32:GPIO26", "buzzer:POS", "red"],
+
+    ["esp32:GPIO34", "flowPot:SIG", "green"],
+    ["esp32:GPIO35", "pressurePot:SIG", "green"],
+    ["esp32:GND.1", "flowPot:GND", "black"],
+    ["esp32:GND.1", "pressurePot:GND", "black"],
+    ["esp32:3V3", "flowPot:VCC", "red"],
+    ["esp32:3V3", "pressurePot:VCC", "red"]
+  ]
+}
