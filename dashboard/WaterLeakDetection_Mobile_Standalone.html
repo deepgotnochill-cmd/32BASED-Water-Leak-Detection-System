@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Smart Distributed Water Pipeline - Standalone Mobile</title>
+    <style>
+      :root {
+        --bg: #071421;
+        --bg-2: #0d1e2b;
+        --panel: rgba(11, 22, 31, 0.9);
+        --panel-strong: rgba(9, 18, 27, 0.96);
+        --line: rgba(148, 163, 184, 0.22);
+        --text: #edf7ff;
+        --muted: #9ab9d3;
+        --cyan: #67e8f9;
+        --blue: #3b82f6;
+        --green: #22c55e;
+        --amber: #fbbf24;
+        --red: #ef4444;
+        --dark: #030d15;
+        --shadow: rgba(5, 13, 21, 0.7);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html, body {
+        margin: 0;
+        width: 100%;
+        min-height: 100%;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(59, 130, 246, 0.18), transparent 28%),
+          linear-gradient(135deg, var(--bg), var(--bg-2));
+        color: var(--text);
+        overflow-x: hidden;
+      }
+
+      body {
+        display: flex;
+        justify-content: center;
+        padding: max(12px, env(safe-area-inset-top)) 10px max(14px, env(safe-area-inset-bottom));
+      }
+
+      .app-shell {
+        width: min(100%, 620px);
+      }
+
+      .topbar {
+        background: rgba(10, 21, 31, 0.86);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 14px 14px 12px;
+        box-shadow: 0 16px 32px var(--shadow);
+      }
+
+      .eyebrow {
+        margin: 0;
+        color: var(--cyan);
+        letter-spacing: 0.18em;
+        font-size: 0.62rem;
+        font-weight: 700;
+      }
+
+      h1 {
+        margin: 6px 0 0;
+        font-size: clamp(1.1rem, 4.8vw, 1.8rem);
+        line-height: 1.15;
+      }
+
+      .header-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      button {
+        -webkit-tap-highlight-color: transparent;
+        width: 100%;
+        min-height: 46px;
+        border: 1px solid rgba(103, 232, 249, 0.32);
+        border-radius: 12px;
+        background: rgba(14, 27, 42, 0.9);
+        color: var(--text);
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        touch-action: manipulation;
+        transition: transform 0.15s ease, opacity 0.2s ease, border-color 0.2s ease;
+      }
+
+      button:active {
+        transform: scale(0.98);
+      }
+
+      .scenario-btn {
+        background: rgba(12, 30, 38, 0.9);
+      }
+
+      .secondary {
+        background: rgba(24, 54, 72, 0.82);
+      }
+
+      .status-strip {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 12px;
+        margin-bottom: 12px;
+      }
+
+      .status-box {
+        min-height: 82px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: rgba(10, 21, 31, 0.82);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .label {
+        display: block;
+        color: var(--muted);
+        font-size: 0.62rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .status-box strong {
+        margin-top: 8px;
+        font-size: 0.98rem;
+        line-height: 1.3;
+      }
+
+      .alarm-box {
+        border-color: rgba(239, 68, 68, 0.42);
+        box-shadow: inset 0 0 18px rgba(239, 68, 68, 0.07);
+      }
+
+      .visual-card,
+      .panel-block,
+      .node-card,
+      .chart-box {
+        background: rgba(10, 21, 31, 0.9);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        box-shadow: 0 16px 28px var(--shadow);
+      }
+
+      .visual-card {
+        padding: 10px;
+      }
+
+      .pipeline-viewport {
+        position: relative;
+        width: 100%;
+        min-height: 300px;
+        height: 42vh;
+        max-height: 420px;
+        border: 1px solid rgba(103, 232, 249, 0.2);
+        border-radius: 14px;
+        overflow: hidden;
+        background: linear-gradient(180deg, rgba(5, 16, 24, 0.9), rgba(8, 16, 25, 1));
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .scene-hud {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        width: 160px;
+        background: rgba(6, 17, 27, 0.72);
+        border: 1px solid rgba(103, 232, 249, 0.2);
+        border-radius: 12px;
+        padding: 10px 10px 8px;
+        backdrop-filter: blur(8px);
+      }
+
+      .hud-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 6px;
+        font-size: 0.65rem;
+      }
+
+      .hud-label {
+        color: var(--muted);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .hud-row strong {
+        font-size: 0.68rem;
+        text-align: right;
+      }
+
+      .camera-reset-btn {
+        position: absolute;
+        left: 10px;
+        bottom: 10px;
+        width: auto;
+        min-width: 120px;
+        min-height: 38px;
+        font-size: 0.72rem;
+      }
+
+      .info-grid {
+        display: grid;
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .panel-block {
+        padding: 12px 12px 10px;
+      }
+
+      .panel-block h2,
+      .chart-box h3 {
+        margin: 0 0 10px;
+        color: var(--cyan);
+        font-size: 0.7rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .metric-row,
+      .alert-detail,
+      .metric-line {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        color: var(--muted);
+      }
+
+      .metric-row {
+        padding: 9px 0;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+      }
+
+      .metric-row strong,
+      .alert-detail strong,
+      .metric-line strong {
+        color: var(--text);
+        text-align: right;
+      }
+
+      .alert-detail {
+        flex-direction: column;
+        align-items: flex-start;
+        margin-top: 10px;
+        gap: 5px;
+      }
+
+      .explain-panel ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 7px;
+        color: var(--muted);
+      }
+
+      .probable-leak-box {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        color: var(--muted);
+      }
+
+      .probable-leak-box strong {
+        color: var(--cyan);
+      }
+
+      .chart-row {
+        display: grid;
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .chart-box {
+        padding: 12px 10px 8px;
+      }
+
+      .mini-chart {
+        width: 100%;
+        height: 140px;
+        background: rgba(6, 12, 18, 0.7);
+        border-radius: 10px;
+        border: 1px solid rgba(148, 163, 184, 0.12);
+      }
+
+      .node-panel {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .node-card {
+        padding: 10px 10px 8px;
+      }
+
+      .node-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 8px;
+        font-weight: 700;
+        font-size: 0.7rem;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 64px;
+        padding: 4px 7px;
+        border-radius: 999px;
+        font-size: 0.58rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+      }
+
+      .metric-line {
+        padding: 6px 0;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        font-size: 0.7rem;
+      }
+
+      .node-card.normal {
+        border-color: rgba(34, 197, 94, 0.24);
+      }
+
+      .node-card.warning {
+        border-color: rgba(251, 191, 36, 0.34);
+      }
+
+      .node-card.critical {
+        border-color: rgba(239, 68, 68, 0.38);
+      }
+
+      .node-card.normal .tag {
+        background: rgba(34, 197, 94, 0.12);
+        color: var(--green);
+      }
+
+      .node-card.warning .tag {
+        background: rgba(251, 191, 36, 0.12);
+        color: var(--amber);
+      }
+
+      .node-card.critical .tag {
+        background: rgba(239, 68, 68, 0.12);
+        color: var(--red);
+      }
+
+      @media (orientation: landscape) and (max-height: 500px) {
+        body {
+          padding-top: 8px;
+        }
+
+        .app-shell {
+          width: min(100%, 980px);
+        }
+
+        .header-actions {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .pipeline-viewport {
+          min-height: 220px;
+          height: 34vh;
+        }
+
+        .node-panel {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">SMART DISTRIBUTED WATER PIPELINE</p>
+          <h1>LEAK DETECTION & LOCALIZATION</h1>
+        </div>
+        <div class="header-actions">
+          <button class="scenario-btn" data-scenario="NORMAL">NORMAL</button>
+          <button class="scenario-btn" data-scenario="LEAK_BC">LEAK B-C</button>
+          <button class="scenario-btn" data-scenario="LEAK_CD">LEAK C-D</button>
+          <button class="scenario-btn" data-scenario="TRANSIENT">TRANSIENT</button>
+          <button class="secondary" id="resetBtn">RESET</button>
+          <button class="secondary" id="cameraResetBtn">VIEW</button>
+        </div>
+      </header>
+
+      <section class="status-strip">
+        <div class="status-box">
+          <span class="label">SYSTEM</span>
+          <strong id="systemStatus">NORMAL</strong>
+        </div>
+        <div class="status-box">
+          <span class="label">SCENARIO</span>
+          <strong id="currentScenario">NORMAL</strong>
+        </div>
+        <div class="status-box alarm-box">
+          <span class="label">LEAK STATUS</span>
+          <strong id="leakStatus">NO LEAK</strong>
+        </div>
+        <div class="status-box">
+          <span class="label">ZONE</span>
+          <strong id="suspectedZone">NONE</strong>
+        </div>
+        <div class="status-box">
+          <span class="label">CONFIDENCE</span>
+          <strong id="confidence">0%</strong>
+        </div>
+        <div class="status-box">
+          <span class="label">FLOW</span>
+          <strong id="systemFlow">20.0 L/min</strong>
+        </div>
+      </section>
+
+      <div class="visual-card">
+        <div class="pipeline-viewport">
+          <canvas id="sceneCanvas" width="800" height="420" aria-label="Pipeline visualization"></canvas>
+          <div class="scene-hud">
+            <div class="hud-row">
+              <span class="hud-label">SYSTEM</span>
+              <strong id="sceneSystem">NORMAL</strong>
+            </div>
+            <div class="hud-row">
+              <span class="hud-label">FLOW</span>
+              <strong id="sceneFlow">20.0 L/min</strong>
+            </div>
+            <div class="hud-row">
+              <span class="hud-label">PRESSURE</span>
+              <strong id="scenePressure">3.3 bar</strong>
+            </div>
+            <div class="hud-row">
+              <span class="hud-label">ZONE</span>
+              <strong id="sceneZone">NONE</strong>
+            </div>
+            <div class="hud-row">
+              <span class="hud-label">CONFIDENCE</span>
+              <strong id="sceneConfidence">0%</strong>
+            </div>
+          </div>
+          <button id="cameraResetBtnSecondary" class="camera-reset-btn">RESET VIEW</button>
+        </div>
+      </div>
+
+      <div class="info-grid">
+        <div class="panel-block prediction-panel">
+          <h2>Prediction</h2>
+          <div class="metric-row">
+            <span>Status</span>
+            <strong id="predictionStatus">NO LEAK</strong>
+          </div>
+          <div class="metric-row">
+            <span>Leak Probability</span>
+            <strong id="predictionProbability">0%</strong>
+          </div>
+          <div class="metric-row">
+            <span>Confidence</span>
+            <strong id="predictionConfidence">0%</strong>
+          </div>
+          <div class="alert-detail">
+            <span>Predicted Zone:</span>
+            <strong id="predictionZone">NONE</strong>
+          </div>
+          <div class="alert-detail">
+            <span>Reason:</span>
+            <strong id="predictionReason">No sustained anomaly detected.</strong>
+          </div>
+        </div>
+
+        <div class="panel-block alert-panel">
+          <h2 id="alertTitle">✓ SYSTEM NORMAL</h2>
+          <div class="alert-detail">
+            <span>Probable Zone:</span>
+            <strong id="alertZone">NONE</strong>
+          </div>
+          <div class="alert-detail">
+            <span>Confidence:</span>
+            <strong id="alertConfidence">0%</strong>
+          </div>
+          <div class="alert-detail">
+            <span>Reason:</span>
+            <strong id="alertReason">No sustained anomaly detected.</strong>
+          </div>
+        </div>
+
+        <div class="panel-block explain-panel">
+          <h2>WHY THIS ALERT?</h2>
+          <ul id="explainList">
+            <li>✓ Flow deviation within baseline.</li>
+            <li>✓ Pressure deviation within baseline.</li>
+            <li>✓ No persistent anomaly detected.</li>
+            <li>✓ Neighboring nodes consistent.</li>
+            <li>✓ Leak zone not required.</li>
+          </ul>
+          <div class="probable-leak-box">
+            <span>PROBABLE LEAK:</span>
+            <strong id="probableLeak">NONE</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-row">
+        <div class="chart-box">
+          <h3>FLOW PROFILE</h3>
+          <canvas id="flowChart" class="mini-chart" width="360" height="170"></canvas>
+        </div>
+        <div class="chart-box">
+          <h3>PRESSURE PROFILE</h3>
+          <canvas id="pressureChart" class="mini-chart" width="360" height="170"></canvas>
+        </div>
+      </div>
+
+      <div class="node-panel" id="nodePanel">
+        <div class="node-card normal" data-node-card="A">
+          <div class="node-card-header">
+            <span>NODE A</span>
+            <span class="tag">NORMAL</span>
+          </div>
+          <div class="metric-line"><span>Flow</span><strong>20.0 L/min</strong></div>
+          <div class="metric-line"><span>Pressure</span><strong>3.3 bar</strong></div>
+          <div class="metric-line"><span>Status</span><strong>NORMAL</strong></div>
+          <div class="metric-line"><span>Health</span><strong>HEALTHY</strong></div>
+        </div>
+
+        <div class="node-card normal" data-node-card="B">
+          <div class="node-card-header">
+            <span>NODE B</span>
+            <span class="tag">NORMAL</span>
+          </div>
+          <div class="metric-line"><span>Flow</span><strong>20.0 L/min</strong></div>
+          <div class="metric-line"><span>Pressure</span><strong>3.3 bar</strong></div>
+          <div class="metric-line"><span>Status</span><strong>NORMAL</strong></div>
+          <div class="metric-line"><span>Health</span><strong>HEALTHY</strong></div>
+        </div>
+
+        <div class="node-card normal" data-node-card="C">
+          <div class="node-card-header">
+            <span>NODE C</span>
+            <span class="tag">NORMAL</span>
+          </div>
+          <div class="metric-line"><span>Flow</span><strong>20.0 L/min</strong></div>
+          <div class="metric-line"><span>Pressure</span><strong>3.3 bar</strong></div>
+          <div class="metric-line"><span>Status</span><strong>NORMAL</strong></div>
+          <div class="metric-line"><span>Health</span><strong>HEALTHY</strong></div>
+        </div>
+
+        <div class="node-card normal" data-node-card="D">
+          <div class="node-card-header">
+            <span>NODE D</span>
+            <span class="tag">NORMAL</span>
+          </div>
+          <div class="metric-line"><span>Flow</span><strong>20.0 L/min</strong></div>
+          <div class="metric-line"><span>Pressure</span><strong>3.3 bar</strong></div>
+          <div class="metric-line"><span>Status</span><strong>NORMAL</strong></div>
+          <div class="metric-line"><span>Health</span><strong>HEALTHY</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Standalone mobile version of the existing leak detection simulation.
+      // This file does not depend on any local CSS, JS, or library files and can be opened directly from a phone.
+      const scenarioMap = {
+        NORMAL: {
+          label: 'NORMAL',
+          leakStatus: 'NO LEAK',
+          zone: 'NONE',
+          confidence: 0,
+          reason: 'No sustained anomaly detected.',
+          alertTitle: '✓ SYSTEM NORMAL',
+          explain: [
+            '✓ Flow deviation within baseline.',
+            '✓ Pressure deviation within baseline.',
+            '✓ No persistent anomaly detected.',
+            '✓ Neighboring nodes consistent.',
+            '✓ Leak zone not required.'
+          ],
+          probableLeak: 'NONE',
+          nodes: [
+            { flow: 20.1, pressure: 3.4, status: 'NORMAL', health: 'HEALTHY' },
+            { flow: 20.0, pressure: 3.3, status: 'NORMAL', health: 'HEALTHY' },
+            { flow: 20.0, pressure: 3.3, status: 'NORMAL', health: 'HEALTHY' },
+            { flow: 20.1, pressure: 3.4, status: 'NORMAL', health: 'HEALTHY' }
+          ]
+        },
+        LEAK_BC: {
+          label: 'LEAK B-C',
+          leakStatus: 'LEAK DETECTED',
+          zone: 'NODE B → NODE C',
+          confidence: 87,
+          reason: 'Sustained correlated flow and pressure anomaly detected.',
+          alertTitle: '⚠ LEAK DETECTED',
+          explain: [
+            '✓ Flow deviation detected.',
+            '✓ Pressure deviation detected.',
+            '✓ Anomaly persisted across samples.',
+            '✓ Neighboring node corroborated event.',
+            '✓ Leak zone estimated at B-C.'
+          ],
+          probableLeak: 'NODE B → NODE C',
+          nodes: [
+            { flow: 20.1, pressure: 3.4, status: 'NORMAL', health: 'HEALTHY' },
+            { flow: 17.2, pressure: 2.8, status: 'WARNING', health: 'WARNING' },
+            { flow: 16.9, pressure: 2.7, status: 'CRITICAL', health: 'CRITICAL' },
+            { flow: 20.0, pressure: 3.3, status: 'NORMAL', health: 'HEALTHY' }
+          ]
+        },
+        LEAK_CD: {
+          label: 'LEAK C-D',
+          leakStatus: 'LEAK DETECTED',
+          zone: 'NODE C → NODE D',
+          confidence: 82,
+          reason: 'Downstream pressure loss and flow reduction indicate a leak near C-D.',
+          alertTitle: '⚠ LEAK DETECTED',
+          explain: [
+            '✓ Flow reduction observed downstream.',
+            '✓ Pressure loss persisted.',
+            '✓ Downstream node corroboration confirmed.',
+            '✓ Identified leak zone between C and D.',
+            '✓ Probability estimate based on sustained pattern.'
+          ],
+          probableLeak: 'NODE C → NODE D',
+          nodes: [
+            { flow: 20.2, pressure: 3.4, status: 'NORMAL', health: 'HEALTHY' },
+            { flow: 19.7, pressure: 3.2, status: 'NORMAL', health: 'HEALTHY' },
+            { flow: 17.1, pressure: 2.8, status: 'WARNING', health: 'WARNING' },
+            { flow: 16.8, pressure: 2.6, status: 'CRITICAL', health: 'CRITICAL' }
+          ]
+        },
+        TRANSIENT: {
+          label: 'TRANSIENT',
+          leakStatus: 'NO CONFIRMED LEAK',
+          zone: 'NONE',
+          confidence: 18,
+          reason: 'Temporary fluctuation fell below sustained leak threshold.',
+          alertTitle: '⚠ TEMPORARY DISTURBANCE',
+          explain: [
+            '✓ Brief fluctuation observed.',
+            '✓ Deviation not sustained over time.',
+            '✓ No confirmed leak pattern developed.',
+            '✓ No neighboring corroboration sustained.',
+            '✓ System filtered this as a transient event.'
+          ],
+          probableLeak: 'NONE',
+          nodes: [
+            { flow: 19.9, pressure: 3.2, status: 'NORMAL', health: 'HEALTHY' },
+            { flow: 18.8, pressure: 3.1, status: 'WARNING', health: 'WARNING' },
+            { flow: 19.8, pressure: 3.2, status: 'NORMAL', health: 'HEALTHY' },
+            { flow: 20.1, pressure: 3.3, status: 'NORMAL', health: 'HEALTHY' }
+          ]
+        }
+      };
+
+      const nodeOrder = ['A', 'B', 'C', 'D'];
+      let currentScenario = 'NORMAL';
+
+      const pipelineState = {
+        particles: [],
+        leakPosition: { x: 0, y: 0 },
+        leakStrength: 0,
+        lastTime: 0
+      };
+
+      function setScenario(key) {
+        if (!scenarioMap[key]) return;
+        currentScenario = key;
+        renderScenario();
+      }
+
+      function resetDemo() {
+        currentScenario = 'NORMAL';
+        renderScenario();
+      }
+
+      function updateSystemSummary(scenario) {
+        const avgFlow = scenario.nodes.reduce((sum, node) => sum + node.flow, 0) / scenario.nodes.length;
+        const avgPressure = scenario.nodes.reduce((sum, node) => sum + node.pressure, 0) / scenario.nodes.length;
+
+        document.getElementById('systemStatus').textContent = scenario.label === 'NORMAL' ? 'NORMAL' : (scenario.leakStatus.includes('LEAK') ? 'ALERT' : 'DISTURBANCE');
+        document.getElementById('currentScenario').textContent = scenario.label;
+        document.getElementById('leakStatus').textContent = scenario.leakStatus;
+        document.getElementById('suspectedZone').textContent = scenario.zone;
+        document.getElementById('confidence').textContent = `${scenario.confidence}%`;
+        document.getElementById('systemFlow').textContent = `${avgFlow.toFixed(1)} L/min`;
+
+        document.getElementById('alertTitle').textContent = scenario.alertTitle;
+        document.getElementById('alertZone').textContent = scenario.zone;
+        document.getElementById('alertConfidence').textContent = `${scenario.confidence}%`;
+        document.getElementById('alertReason').textContent = scenario.reason;
+        document.getElementById('explainList').innerHTML = scenario.explain.map((line) => `<li>${line}</li>`).join('');
+        document.getElementById('probableLeak').textContent = scenario.probableLeak;
+
+        const sceneSystem = document.getElementById('sceneSystem');
+        const sceneFlow = document.getElementById('sceneFlow');
+        const scenePressure = document.getElementById('scenePressure');
+        const sceneZone = document.getElementById('sceneZone');
+        const sceneConfidence = document.getElementById('sceneConfidence');
+
+        sceneSystem.textContent = scenario.label === 'NORMAL' ? 'NORMAL' : (scenario.leakStatus.includes('LEAK') ? 'LEAK DETECTED' : 'DISTURBANCE');
+        sceneFlow.textContent = `${avgFlow.toFixed(1)} L/min`;
+        scenePressure.textContent = `${avgPressure.toFixed(1)} bar`;
+        sceneZone.textContent = scenario.zone;
+        sceneConfidence.textContent = `${scenario.confidence}%`;
+      }
+
+      function updatePredictionPanel(scenario) {
+        document.getElementById('predictionStatus').textContent = scenario.leakStatus;
+        document.getElementById('predictionProbability').textContent = `${scenario.confidence}%`;
+        document.getElementById('predictionConfidence').textContent = `${scenario.confidence}%`;
+        document.getElementById('predictionZone').textContent = scenario.zone;
+        document.getElementById('predictionReason').textContent = scenario.reason;
+      }
+
+      function updateNodeCards(scenario) {
+        const cardEls = document.querySelectorAll('[data-node-card]');
+        cardEls.forEach((cardEl, index) => {
+          const node = scenario.nodes[index];
+          const title = cardEl.querySelector('.node-card-header span');
+          const tag = cardEl.querySelector('.tag');
+          const metrics = cardEl.querySelectorAll('.metric-line strong');
+          const stateClass = node.status === 'NORMAL' ? 'normal' : node.status === 'WARNING' ? 'warning' : 'critical';
+
+          cardEl.className = `node-card ${stateClass}`;
+          title.textContent = `NODE ${nodeOrder[index]}`;
+          tag.textContent = node.status;
+          metrics[0].textContent = `${node.flow.toFixed(1)} L/min`;
+          metrics[1].textContent = `${node.pressure.toFixed(1)} bar`;
+          metrics[2].textContent = node.status;
+          metrics[3].textContent = node.health;
+        });
+      }
+
+      function drawChart(canvas, values, color, min, max) {
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        const margin = 16;
+
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = 'rgba(6, 12, 18, 0.7)';
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.strokeStyle = 'rgba(148,163,184,0.22)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 4; i++) {
+          const y = margin + (i * (height - margin * 2)) / 3;
+          ctx.beginPath();
+          ctx.moveTo(margin, y);
+          ctx.lineTo(width - margin, y);
+          ctx.stroke();
+        }
+
+        const range = max - min || 1;
+        const points = values.map((value, index) => {
+          const x = margin + (index * (width - margin * 2)) / (values.length - 1);
+          const normalized = (value - min) / range;
+          const y = height - margin - normalized * (height - margin * 2);
+          return { x, y };
+        });
+
+        ctx.beginPath();
+        points.forEach((point, index) => {
+          if (index === 0) ctx.moveTo(point.x, point.y);
+          else ctx.lineTo(point.x, point.y);
+        });
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+
+      function setupParticles() {
+        const count = 18;
+        pipelineState.particles = Array.from({ length: count }, (_, i) => ({
+          t: (i / count),
+          size: 3 + (i % 4),
+          offset: i * 0.11
+        }));
+      }
+
+      function getPipePoints(width, height) {
+        const left = 0.08 * width;
+        const right = 0.92 * width;
+        const midY = height * 0.54;
+        const points = [
+          { x: 0.06 * width, y: midY },
+          { x: 0.22 * width, y: midY },
+          { x: 0.38 * width, y: midY },
+          { x: 0.55 * width, y: midY },
+          { x: 0.72 * width, y: midY },
+          { x: 0.94 * width, y: midY }
+        ];
+        return points;
+      }
+
+      function drawBackground(ctx, width, height) {
+        ctx.clearRect(0, 0, width, height);
+        const gradient = ctx.createLinearGradient(0, 0, 0, height);
+        gradient.addColorStop(0, '#091a29');
+        gradient.addColorStop(1, '#040d15');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
+
+        for (let i = 0; i < 8; i++) {
+          ctx.strokeStyle = 'rgba(103,232,249,0.05)';
+          ctx.beginPath();
+          ctx.moveTo(0, (height / 8) * i);
+          ctx.lineTo(width, (height / 8) * i);
+          ctx.stroke();
+        }
+      }
+
+      function drawPipelineScene() {
+        const canvas = document.getElementById('sceneCanvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        const scenario = scenarioMap[currentScenario];
+        const pipePoints = getPipePoints(width, height);
+
+        drawBackground(ctx, width, height);
+
+        const leakIndex = currentScenario === 'LEAK_BC' ? 2 : currentScenario === 'LEAK_CD' ? 3 : -1;
+        const pipeColor = currentScenario === 'TRANSIENT' ? '#fbbf24' : currentScenario.includes('LEAK') ? '#ef4444' : '#67e8f9';
+
+        // Draw the pipe path with a slightly perspective-style layout exaggerating the main flow line.
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = pipeColor;
+        ctx.lineWidth = 20;
+        ctx.strokeStyle = currentScenario === 'TRANSIENT' ? '#fbbf24' : '#67e8f9';
+        ctx.beginPath();
+        pipePoints.forEach((point, index) => {
+          if (index === 0) ctx.moveTo(point.x, point.y);
+          else ctx.lineTo(point.x, point.y);
+        });
+        ctx.stroke();
+
+        // Highlight the leak segment.
+        if (leakIndex >= 0) {
+          const a = pipePoints[leakIndex];
+          const b = pipePoints[leakIndex + 1];
+          const leakX = (a.x + b.x) / 2;
+          const leakY = (a.y + b.y) / 2;
+          pipelineState.leakPosition = { x: leakX, y: leakY };
+          pipelineState.leakStrength = 1;
+
+          ctx.beginPath();
+          ctx.lineWidth = 18;
+          ctx.strokeStyle = '#ff4d4d';
+          ctx.shadowColor = '#ff4d4d';
+          ctx.shadowBlur = 26;
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+
+          const glow = ctx.createRadialGradient(leakX, leakY, 6, leakX, leakY, 60);
+          glow.addColorStop(0, 'rgba(255,120,120,0.95)');
+          glow.addColorStop(0.35, 'rgba(255,90,90,0.7)');
+          glow.addColorStop(1, 'rgba(255,90,90,0)');
+          ctx.fillStyle = glow;
+          ctx.beginPath();
+          ctx.arc(leakX, leakY, 60, 0, Math.PI * 2);
+          ctx.fill();
+
+          const dropletCount = 12;
+          for (let i = 0; i < dropletCount; i++) {
+            const a1 = (i / dropletCount) * Math.PI * 2;
+            const r = 22 + (i % 4) * 8;
+            const px = leakX + Math.cos(a1) * r;
+            const py = leakY + Math.sin(a1) * r * 0.8;
+            ctx.fillStyle = 'rgba(255,160,165,0.9)';
+            ctx.beginPath();
+            ctx.arc(px, py, 5 + (i % 3), 0, Math.PI * 2);
+            ctx.fill();
+          }
+        } else {
+          pipelineState.leakStrength = 0;
+        }
+
+        // Node sensors.
+        const sensorPositions = pipePoints.slice(1, 5).map((point, idx) => ({
+          x: point.x,
+          y: point.y,
+          label: nodeOrder[idx]
+        }));
+
+        sensorPositions.forEach((sensor, index) => {
+          const nodeStatus = scenario.nodes[index + 1]?.status || scenario.nodes[index]?.status || 'NORMAL';
+          const color = nodeStatus === 'CRITICAL' ? '#ef4444' : nodeStatus === 'WARNING' ? '#fbbf24' : '#34d399';
+
+          const boxX = sensor.x - 18;
+          const boxY = sensor.y - 54;
+          ctx.fillStyle = '#0d1a24';
+          ctx.fillRect(boxX, boxY, 36, 28);
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2;
+          ctx.strokeRect(boxX, boxY, 36, 28);
+
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(sensor.x, sensor.y + 8, 9, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#dbeafe';
+          ctx.font = 'bold 11px Segoe UI';
+          ctx.textAlign = 'center';
+          ctx.fillText(sensor.label, sensor.x, sensor.y - 16);
+        });
+
+        // Water particles moving along the pipe.
+        const tNow = performance.now() * 0.001;
+        const particleColor = currentScenario === 'TRANSIENT' ? '#fbbf24' : currentScenario.includes('LEAK') ? '#ff6b6b' : '#7dd3fc';
+        pipelineState.particles.forEach((particle, index) => {
+          const normalized = (tNow * 0.25 + particle.t + particle.offset) % 1;
+          const x = pipePoints[0].x + normalized * (pipePoints[pipePoints.length - 1].x - pipePoints[0].x);
+          const y = pipePoints[0].y + Math.sin(normalized * Math.PI * 2 + index) * 6;
+          ctx.fillStyle = particleColor;
+          ctx.shadowBlur = 14;
+          ctx.shadowColor = particleColor;
+          ctx.beginPath();
+          ctx.arc(x, y, particle.size, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        ctx.shadowBlur = 0;
+      }
+
+      function renderScenario() {
+        const scenario = scenarioMap[currentScenario];
+        updateSystemSummary(scenario);
+        updatePredictionPanel(scenario);
+        updateNodeCards(scenario);
+
+        const flowValues = scenario.nodes.map((node) => node.flow);
+        const pressureValues = scenario.nodes.map((node) => node.pressure);
+        drawChart(document.getElementById('flowChart'), flowValues, '#67e8f9', 15, 24);
+        drawChart(document.getElementById('pressureChart'), pressureValues, '#22c55e', 2.4, 3.8);
+      }
+
+      function animate() {
+        drawPipelineScene();
+        requestAnimationFrame(animate);
+      }
+
+      function attachEvents() {
+        document.querySelectorAll('.scenario-btn').forEach((button) => {
+          button.addEventListener('click', () => {
+            const key = button.dataset.scenario;
+            setScenario(key);
+          });
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', resetDemo);
+        document.getElementById('cameraResetBtn').addEventListener('click', () => {
+          renderScenario();
+        });
+        document.getElementById('cameraResetBtnSecondary').addEventListener('click', () => {
+          renderScenario();
+        });
+      }
+
+      setupParticles();
+      attachEvents();
+      renderScenario();
+      requestAnimationFrame(animate);
+    </script>
+  </body>
+</html>
