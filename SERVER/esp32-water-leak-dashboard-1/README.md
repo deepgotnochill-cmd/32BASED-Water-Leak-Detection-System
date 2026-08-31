@@ -45,3 +45,4 @@ The existing dashboard files (`index.html`, `styles.css`, `app.js`) and the Thre
 
 - This project utilizes the ESP32 microcontroller for water leak detection.
 - The dashboard is designed to provide real-time monitoring and visualization of the system's status.
+Thank you so so much for investing your time on my project, Means alot!!
